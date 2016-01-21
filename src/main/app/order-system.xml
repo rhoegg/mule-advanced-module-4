@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule 
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" 
 xmlns="http://www.mulesoft.org/schema/mule/core"
 xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
@@ -13,22 +13,27 @@ xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.sprin
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
     
     <http:listener-config name="http8086" host="0.0.0.0" port="8086" doc:name="HTTP Listener Configuration" />
     
     <ws:consumer-config name="orderSoapService" wsdlLocation="orders.wsdl" service="OrderServiceService" port="OrderServicePort"
         serviceAddress="http://training-u.cloudhub.io/advanced/orders" doc:name="Web Service Consumer" />
-    
-    <flow name="retrieveOrders">
-        <http:listener config-ref="http8086" path="/" doc:name="HTTP" />
-        <set-variable variableName="dateRange" value="#[message.inboundProperties.'http.query.params'.range]" doc:name="dateRange" />
-        <parse-template location="orderRequest.xml" doc:name="Order Request" />
-        <ws:consumer config-ref="orderSoapService" doc:name="SOAP provisionOrder" operation="provisionOrder" />
+    <sub-flow name="retrieveOrders">
+        <set-variable variableName="dateRange" value="#[message.inboundProperties.'http.query.params'.range]" doc:name="dateRange"/>
+        <parse-template location="orderRequest.xml" doc:name="Order Request"/>
+        <ws:consumer config-ref="orderSoapService" operation="provisionOrder" doc:name="SOAP provisionOrder"/>
         <dw:transform-message doc:name="legacy Orders to CDM">
-            <dw:input-payload doc:sample="provisionOrderResponse.xml" />
-            <dw:set-payload resource="classpath:provisionOrders_to_cdm.dwl"></dw:set-payload>
+            <dw:input-payload doc:sample="provisionOrderResponse.xml"/>
+            <dw:set-payload resource="classpath:provisionOrders_to_cdm.dwl"/>
         </dw:transform-message>
+    </sub-flow>
+    
+    <flow name="main">
+        <http:listener config-ref="http8086" path="/" doc:name="HTTP" />
+        <flow-ref name="retrieveOrders" doc:name="retrieveOrders"/>
+        <flow-ref name="processOrders" doc:name="processOrders"/>
     </flow>
     
     <flow name="processOrders">
