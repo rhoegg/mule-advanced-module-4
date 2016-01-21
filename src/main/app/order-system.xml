@@ -21,6 +21,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <ws:consumer-config name="orderSoapService" wsdlLocation="orders.wsdl" service="OrderServiceService" port="OrderServicePort"
         serviceAddress="http://training-u.cloudhub.io/advanced/orders" doc:name="Web Service Consumer" />
     <sub-flow name="retrieveOrders">
+        <logger level="DEBUG" category="com.mulesoft.training.order-system.main" doc:name="DEBUG"/>
         <set-variable variableName="dateRange" value="#[message.inboundProperties.'http.query.params'.range]" doc:name="dateRange"/>
         <parse-template location="orderRequest.xml" doc:name="Order Request"/>
         <ws:consumer config-ref="orderSoapService" operation="provisionOrder" doc:name="SOAP provisionOrder"/>
