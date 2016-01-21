@@ -27,6 +27,7 @@
         
         <!--AsyncLogger name="httpclient.wire" level="ALL" /-->
 
+        <AsyncLogger name="com.mulesoft.training.order-system" level="DEBUG"/>
         <AsyncRoot level="INFO">
             <AppenderRef ref="Console"/>
         </AsyncRoot>
